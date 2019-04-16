@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipython = "*"
+mypy = "*"
+pytest = "*"
+pytest-cov = "*"
+coverage = "*"
+
+[packages]
+ledgerblue = "==0.1.23"
+riemann-tx = "==1.1.7"
+mypy-extensions = "*"
+
+[requires]
+python_version = "3.6"

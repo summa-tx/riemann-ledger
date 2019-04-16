@@ -1,0 +1,13 @@
+*.egg-info/
+*.pyc
+.pytest_cache
+.python-version
+
+build/
+src/bidderdist/
+dist
+.mypy_cache/
+
+.tox/
+.coverage
+coverage/
