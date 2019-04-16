@@ -109,19 +109,19 @@ def _make_child_xpub(
         derivation: str,
         parent_or_none: Optional[LedgerPubkey],
         child: LedgerPubkey,
-        testnet: bool = False) -> str:
+        mainnet: bool = True) -> str:
     '''
     Builds an xpub for a derived child using its parent and path
     Args:
         derivation      (str): the m-prefixed derivation path e.g. m/44h/0h/0h
         parent (LedgerPubkey): the parent public key
         child  (LedgerPubkey): the child public key
-        testnet        (bool): whether to use testnet prefixes
+        mainnet        (bool): whether to use mainnet prefixes
     '''
     indices = utils.parse_derivation(derivation)
 
     # determine appropriate xpub version bytes
-    if testnet:
+    if not mainnet:
         prefix = utils.VERSION_BYTES['testnet']['public']
     else:
         prefix = utils.VERSION_BYTES['mainnet']['public']
@@ -186,7 +186,7 @@ async def get_uncompressed_public_key(derivation: str) -> bytes:
     return pubkey['pubkey']
 
 
-async def get_xpub(derivation: str) -> str:
+async def get_xpub(derivation: str, mainnet: bool = True) -> str:
     '''
     Gets the xpub at a derivation path
     '''
@@ -200,7 +200,7 @@ async def get_xpub(derivation: str) -> str:
     child = await _get_key_info(derivation)
 
     # make the xpub for the child and instantiate an object
-    xpub = _make_child_xpub(derivation, parent, child)
+    xpub = _make_child_xpub(derivation, parent, child, mainnet)
     return xpub
 
 
