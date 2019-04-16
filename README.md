@@ -9,7 +9,8 @@ Supports only native SegWit transactions
 You may need to install `libudev-dev` and/or `libusb-1.0-0-dev`
 
 ```python
-
+import asyncio
+import riemann
 from ledger import blue
 
 async def do_some_things():
@@ -21,15 +22,13 @@ async def do_some_things():
 
     t: riemann.tx.Tx = ...  # a riemann-tx native witness transaction
     prevouts: List[PrevoutInfo] = [...]  # datastructure in ledger.ledger_types
-    sighash_type = 0x01  # a bitcoin sighash flag byte, NONE not supported
 
     # sign each input we can sign
     # return a list. Each entry is the signature bytes, or None if not signable
     sigs: List[Optional[str]] = await blue.get_tx_signatures(
         t=t,
         prevouts=prevouts,
-        derivation=derivation,
-        sighash_type=sighash_type)
+        derivation=derivation)
 
 asyncio.get_event_loop().run_until_complete(do_some_things())
 ```
