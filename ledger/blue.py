@@ -14,8 +14,8 @@ from typing import cast, List, Optional, Tuple
 
 # https://ledgerhq.github.io/btchip-doc/bitcoin-technical-beta.html
 
-
 _CLIENT = None
+SIGHASH_ALL = tx.shared.SIGHASH_ALL
 
 
 class LedgerException(Exception):
@@ -325,8 +325,6 @@ def _transaction_final_packet(
     Returns:
         (bytes): the adpu packet
     '''
-    if sighash_type not in [0x01, 0x03, 0x81, 0x83]:  # ALL SINGLE AACP SACP
-        raise ValueError('invalid sighash_type')
     data = bytearray()
     data.extend(_derivation_path_to_adpu_data(path))  # derivation info
     data.extend(b'\x00')                              # user validation code ??
@@ -410,7 +408,7 @@ async def get_tx_signatures(
         t: tx.Tx,
         prevouts: List[PrevoutInfo],
         derivation: str,
-        sighash_type: int) -> List[Optional[bytes]]:
+        sighash_type: int = SIGHASH_ALL) -> List[Optional[bytes]]:
     '''
     Sign a transaction
     Args:
@@ -419,12 +417,16 @@ async def get_tx_signatures(
             must include the script if we intend to sign the input
             script must NOT be length-prefixed (e.g. 76a914... NOT 1976a914...)
         derivation             (str): m-prefixed derication for the signing key
-        sighash_type           (int): Bitcoin-consensus sighash type
+        sighash_type           (int): Bitcoin-consensus sighash type, ledger
+            firmware currently only supports ALL
     Returns:
         List[Optional[bytes]]: For each input, either a signature or None
     '''
     if len(prevouts) != len(t.tx_ins):
         raise ValueError('mismatch between txins and prevouts')
+
+    if sighash_type != SIGHASH_ALL:
+        raise ValueError('ledger firmware only supports SIGHASH_ALL')
 
     # Let's get the key so we can scan scripts for it
     key = await get_uncompressed_public_key(derivation)
