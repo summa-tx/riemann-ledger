@@ -50,7 +50,7 @@ async def _get_client() -> Dongle:
 async def _exchange(data: bytes) -> bytes:
     try:
         client = await _get_client()
-        return bytes(await utils.asyncify(client._exchange, data))
+        return bytes(await utils.asyncify(client.exchange, data))
     except Exception as e:
         raise LedgerException(str(e))
 
@@ -434,11 +434,8 @@ async def get_tx_signatures(
     packets = [first_packet]  # collect a list of packets for sending later
 
     # packetize each input
-    # while we're doing this, we figure out which we want to sign
-    to_sign = []
     for pair in zip(t.tx_ins, prevouts):
         packets.extend(_packetize_input(*pair))
-        to_sign.append(pair if _signable(key, pair[1]) else None)
 
     # packetize the whole vout
     packets.extend(_packetize_vout(t.tx_outs))
@@ -453,9 +450,9 @@ async def get_tx_signatures(
 
     # build sigs. If we're not signing the input, return None at its index
     sigs = []
-    for pair_or_none in to_sign:
-        sigs.append(None
-                    if pair_or_none is None else
-                    await _get_sig(first_packet, last_packet, *pair_or_none))
+    for pair in zip(t.tx_ins, prevouts):
+        sigs.append(await _get_sig(first_packet, last_packet, *pair)
+                    if _signable(key, pair[1])
+                    else None)
 
     return sigs
