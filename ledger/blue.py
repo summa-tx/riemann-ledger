@@ -22,7 +22,7 @@ class LedgerException(Exception):
     ...
 
 
-async def _make_client() -> Dongle:
+async def make_client() -> Dongle:
     '''
     Sets up a new Ledger client and stores it as a singleton
     '''
@@ -47,10 +47,10 @@ async def _get_client() -> Dongle:
     return _CLIENT
 
 
-async def exchange(data: bytes) -> bytes:
+async def _exchange(data: bytes) -> bytes:
     try:
         client = await _get_client()
-        return bytes(await utils.asyncify(client.exchange, data))
+        return bytes(await utils.asyncify(client._exchange, data))
     except Exception as e:
         raise LedgerException(str(e))
 
@@ -173,7 +173,7 @@ async def _get_key_info(derivation: str) -> LedgerPubkey:
         p2=b'\x02')  # native segwit address
 
     # It comes in a blob with chaincode and address
-    pubkey_response = await exchange(pubkey_adpu)
+    pubkey_response = await _exchange(pubkey_adpu)
 
     # return the parsed response
     pubkey = _parse_public_key_response(pubkey_response)
@@ -337,7 +337,7 @@ def _transaction_final_packet(
         data=data)
 
 
-async def get_sig(
+async def _get_sig(
         first_packet: bytes,
         last_packet: bytes,
         tx_in: tx.TxIn,
@@ -362,10 +362,10 @@ async def get_sig(
     input_packets = _packetize_input_for_signing(tx_in, prevout_info)
 
     # Send all the packets and the sig-request packet
-    await(exchange(first_packet))
+    await(_exchange(first_packet))
     for packet in input_packets:
-        await exchange(packet)
-    response = await exchange(last_packet)  # request the sig
+        await _exchange(packet)
+    response = await _exchange(last_packet)  # request the sig
 
     # unmask the sig before we return it
     return _unmask_sig(response)
@@ -445,7 +445,7 @@ async def get_tx_signatures(
 
     # send all vin/vout packets
     for packet in packets:
-        await exchange(packet)
+        await _exchange(packet)
 
     # calculate the request packet
     indices = utils.parse_derivation(derivation)
@@ -456,6 +456,6 @@ async def get_tx_signatures(
     for pair_or_none in to_sign:
         sigs.append(None
                     if pair_or_none is None else
-                    await get_sig(first_packet, last_packet, *pair_or_none))
+                    await _get_sig(first_packet, last_packet, *pair_or_none))
 
     return sigs
