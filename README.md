@@ -40,4 +40,5 @@ You may need to install `libudev-dev` and/or `libusb-1.0-0-dev`
 
 Clone the repo, then install dependencies with `pipenv install`
 
-Run tests with `./run_tests.sh`
+Run tests with `./run_tests.sh`. Right now this only runs the linter and mypy.
+We'll write some tests soon
