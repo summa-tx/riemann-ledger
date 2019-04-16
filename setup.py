@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='riemann-ledger',
-    version='0.0.1',
+    version='0.0.2',
     description=('Sign Bitcoin transactions on your Ledger Nano S'),
     author=["James Prestwich"],
     license="LGPLv3.0",
