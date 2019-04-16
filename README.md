@@ -20,7 +20,7 @@ async def do_some_things():
     xpub: str = await blue.get_xpub(derivation)
 
     t: riemann.tx.Tx = ...  # a riemann-tx native witness transaction
-    prevouts: List[PrevoutInfo] = [...]  # see ledger_types
+    prevouts: List[PrevoutInfo] = [...]  # datastructure in ledger.ledger_types
     sighash_type = 0x01  # a bitcoin sighash flag byte, NONE not supported
 
     # sign each input we can sign
