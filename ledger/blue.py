@@ -32,7 +32,7 @@ async def make_client() -> Dongle:
         try:
             _CLIENT = await utils.asyncify(getDongle, True)
         except CommException:
-            raise Exception('No device found')
+            raise RuntimeError('No device found')
         return _CLIENT
     else:
         return _CLIENT
