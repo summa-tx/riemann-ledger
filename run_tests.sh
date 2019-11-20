@@ -4,6 +4,10 @@ pipenv run flake8 \
     ledger && \
 pipenv run mypy \
     ledger/ \
+    --disallow-untyped-defs \
+    --strict-equality \
+    --show-error-codes \
+    --warn-return-any \
     --ignore-missing-imports && \
 pipenv run coverage erase && \
 pipenv run pytest \

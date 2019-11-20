@@ -3,14 +3,14 @@
 from setuptools import setup, find_packages
 
 reqs = [
-    'ledgerblue',
-    'riemann-tx==2.0.1',
+    'ledgerblue==0.1.23',
+    'riemann-tx==2.1.0',
     'mypy-extensions'
 ]
 
 setup(
     name='riemann-ledger',
-    version='0.0.3',
+    version='0.1.0',
     url='https://github.com/summa-tx/riemann-ledger',
     description=('Sign Segwit Bitcoin transactions on your Ledger Nano S'),
     author=["James Prestwich"],

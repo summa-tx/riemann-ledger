@@ -1,7 +1,7 @@
 import asyncio
 from functools import partial
 
-from typing import List
+from typing import Any, Awaitable, Callable, List
 
 BIP32_HARDEN = 0x80000000
 
@@ -18,7 +18,7 @@ VERSION_BYTES = {
 }
 
 
-def asyncify(function, *args, **kwargs):
+def asyncify(function: Callable, *args: Any, **kwargs: Any) -> Awaitable:
     '''
     Turns a synchronous function into a future
     '''

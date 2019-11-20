@@ -287,7 +287,7 @@ def _packetize_input_for_signing(
     return [_transaction_continue_packet(chunk) for chunk in chunks]
 
 
-def _packetize_vout(tx_outs: Tuple[tx.TxOut]) -> List[bytes]:
+def _packetize_vout(tx_outs: Tuple[tx.TxOut, ...]) -> List[bytes]:
     '''Converts the output vector into adpu packets'''
     # first get the whole length-prefixed vector
     data_to_be_chunked = bytearray()

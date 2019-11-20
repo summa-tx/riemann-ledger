@@ -11,9 +11,9 @@ pytest-cov = "*"
 coverage = "*"
 
 [packages]
-ledgerblue = "==0.1.23"
-riemann-tx = "==1.1.7"
 mypy-extensions = "*"
+ledgerblue = "==0.1.23"
+riemann-tx = "==2.1.0"
 
 [requires]
 python_version = "3.6"
