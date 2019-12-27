@@ -26,7 +26,7 @@ def _parse_public_key_response(response: bytes) -> LedgerXPub:
         chain_code=bytes(chain_code))
 
 
-async def _get_key_info(derivation: str) -> LedgerXPub:
+async def get_key_info(client: blue.Ledger, derivation: str) -> LedgerXPub:
     '''
     This corresponds to the GET WALLET PUBLIC KEY command
     It asks the ledger for the key at a derivation path
@@ -46,20 +46,24 @@ async def _get_key_info(derivation: str) -> LedgerXPub:
         p2=b'\x02')  # native segwit address
 
     # It comes in a blob with chaincode and address
-    pubkey_response = await blue.exchange(pubkey_req_apdu)
+    pubkey_response = await client.exchange(pubkey_req_apdu)
 
     # return the parsed response
     pubkey = _parse_public_key_response(pubkey_response)
     return pubkey
 
 
-async def get_uncompressed_public_key(derivation: str) -> bytes:
+async def get_uncompressed_public_key(
+        client: blue.Ledger, derivation: str) -> bytes:
     '''Get the public key for a derivation'''
-    pubkey = await _get_key_info(derivation)
+    pubkey = await get_key_info(client, derivation)
     return pubkey['pubkey']
 
 
-async def get_xpub(derivation: str, mainnet: bool = True) -> str:
+async def get_xpub(
+        client: blue.Ledger,
+        derivation: str,
+        mainnet: bool = True) -> str:
     '''
     Gets the xpub at a derivation path
     '''
@@ -68,9 +72,9 @@ async def get_xpub(derivation: str, mainnet: bool = True) -> str:
     else:
         # this looks like magic, but just pops the last derivation off
         parent_derivation = '/'.join(derivation.split('/')[:-1])
-        parent = await _get_key_info(parent_derivation)
+        parent = await get_key_info(client, parent_derivation)
 
-    child = await _get_key_info(derivation)
+    child = await get_key_info(client, derivation)
 
     # make the xpub for the child and instantiate an object
     xpub = utils.make_child_xpub(derivation, parent, child, mainnet)
@@ -209,6 +213,7 @@ def _transaction_final_packet(
 
 
 async def _get_sig(
+        client: blue.Ledger,
         first_packet: bytes,
         last_packet: bytes,
         tx_in: tx.TxIn,
@@ -237,10 +242,10 @@ async def _get_sig(
     input_packets = _packetize_input_for_signing(tx_in, prevout_info)
 
     # Send all the packets and the sig-request packet
-    await blue.exchange(first_packet)
+    await client.exchange(first_packet)
     for packet in input_packets:
-        await blue.exchange(packet)
-    response = await blue.exchange(last_packet)  # request the sig
+        await client.exchange(packet)
+    response = await client.exchange(last_packet)  # request the sig
 
     # unmask the sig before we return it
     return _unmask_sig(response)
@@ -282,6 +287,7 @@ def _unmask_sig(sig: bytes) -> bytes:
 
 
 async def get_tx_signatures(
+        client: blue.Ledger,
         t: tx.Tx,
         prevouts: List[PrevoutInfo],
         derivation: str,
@@ -289,6 +295,7 @@ async def get_tx_signatures(
     '''
     Sign a transaction
     Args:
+        client              (Ledger): the Ledger context manager object
         t                    (tx.Tx): The transaction to sign
         prevouts (List[PrevoutInfo]): value for each Prevout
             must include the script if we intend to sign the input
@@ -306,7 +313,7 @@ async def get_tx_signatures(
         raise ValueError('ledger firmware only supports SIGHASH_ALL')
 
     # Let's get the key so we can scan scripts for it
-    key = await get_uncompressed_public_key(derivation)
+    key = await get_uncompressed_public_key(client, derivation)
 
     # start by packetizing version and len(vin)
     first_packet = _packetize_version_and_vin_length(t)
@@ -321,7 +328,7 @@ async def get_tx_signatures(
 
     # send all vin/vout packets
     for packet in packets:
-        await blue.exchange(packet)
+        await client.exchange(packet)
 
     # calculate the request packet
     indices = utils.parse_derivation(derivation)
@@ -330,7 +337,7 @@ async def get_tx_signatures(
     # build sigs. If we're not signing the input, return None at its index
     sigs = []
     for pair in zip(t.tx_ins, prevouts):
-        sigs.append(await _get_sig(first_packet, last_packet, *pair)
+        sigs.append(await _get_sig(client, first_packet, last_packet, *pair)
                     if _signable(key, pair[1])
                     else None)
 

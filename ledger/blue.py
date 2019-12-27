@@ -1,60 +1,46 @@
-import asyncio
-
 from riemann import utils as rutils
 from ledgerblue.comm import getDongle, Dongle
 from ledgerblue.commException import CommException
 
 from ledger import utils
 
-from typing import List
-
-_CLIENT = None
+from typing import Any, List
 
 
 class LedgerException(Exception):
     ...
 
 
-async def make_client() -> Dongle:
-    '''
-    Sets up a new Ledger client and stores it as a singleton
-    '''
-    global _CLIENT
+class Ledger:
+    client: Dongle = None
+    debug: bool
 
-    if _CLIENT is None:
+    def __init__(self, debug: bool = False):
+        self.debug = debug
+        self.client = None
+
+    def open(self):
+        self.client = getDongle(self.debug)
+
+    def close(self) -> None:
+        self.client.device.close()
+        self.client = None
+
+    async def __aenter__(self) -> 'Ledger':
         try:
-            _CLIENT = await utils.asyncify(getDongle, True)
+            self.open()
+            return self
         except CommException:
             raise RuntimeError('No device found')
-        return _CLIENT
-    else:
-        return _CLIENT
 
+    async def __aexit__(self, *args: Any) -> None:
+        self.close()
 
-async def get_client() -> Dongle:
-    '''Gets the singleton'''
-    # TODO: check if it works and throw error if not
-
-    while _CLIENT is None:
-        await asyncio.sleep(5)
-    return _CLIENT
-
-
-async def close() -> None:
-    global _CLIENT
-
-    if _CLIENT is None:
-        return
-    _CLIENT.device.close()
-    _CLIENT = None
-
-
-async def exchange(data: bytes) -> bytes:
-    try:
-        client = await get_client()
-        return bytes(await utils.asyncify(client.exchange, data))
-    except Exception as e:
-        raise LedgerException(str(e))
+    async def exchange(self, data: bytes) -> bytes:
+        try:
+            return bytes(await utils.asyncify(self.client.exchange, data))
+        except Exception as e:
+            raise LedgerException(str(e))
 
 
 def make_apdu(

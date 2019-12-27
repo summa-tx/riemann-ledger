@@ -25,7 +25,7 @@ def _parse_public_key_response(response: bytes) -> LedgerPubkey:
         address=f'0x{address_bytes.decode("utf8")}')
 
 
-async def _get_key_info(derivation: str) -> LedgerPubkey:
+async def get_key_info(client: blue.Ledger, derivation: str) -> LedgerPubkey:
     '''
     Fetch the pubkey at a specific derivation
     '''
@@ -39,16 +39,16 @@ async def _get_key_info(derivation: str) -> LedgerPubkey:
     )
 
     # It comes in a blob with chaincode and address
-    pubkey_response = await blue.exchange(pubkey_req_apdu)
+    pubkey_response = await client.exchange(pubkey_req_apdu)
 
     # return the parsed response
     pubkey = _parse_public_key_response(pubkey_response)
     return pubkey
 
 
-async def get_app_version() -> List[int]:
+async def get_app_version(client: blue.Ledger) -> List[int]:
     apdu = blue.make_apdu(command=b'\x06')
-    result = await blue.exchange(apdu)
+    result = await client.exchange(apdu)
     return [int(r) for r in result[1:]]
 
 
@@ -84,7 +84,10 @@ def _packetize_data(derivation_data: bytes, ser_tx: bytes) -> List[bytes]:
     return packets
 
 
-async def sign_transaction(t: UnsignedEthTx, derivation: str) -> SignedEthTx:
+async def sign_transaction(
+        client: blue.Ledger,
+        t: UnsignedEthTx,
+        derivation: str) -> SignedEthTx:
     if (t['chainId'] * 2 + 35) + 1 > 255:
         raise ValueError('chainIds above 109 not currently supported.')
 
@@ -105,7 +108,7 @@ async def sign_transaction(t: UnsignedEthTx, derivation: str) -> SignedEthTx:
     packets = _packetize_data(derivation_data, ser_tx)
     try:
         for packet in packets:
-            result = await blue.exchange(packet)
+            result = await client.exchange(packet)
     except blue.LedgerException as e:
         if t['data'] == b'' or '6a80' not in str(e):
             raise e

@@ -11,16 +11,16 @@ reqs = [
 
 setup(
     name='riemann-ledger',
-    version='1.0.0',
+    version='2.0.0',
     url='https://github.com/summa-tx/riemann-ledger',
-    description=('Sign Segwit Bitcoin transactions on your Ledger Nano S'),
+    description=('Sign Bitcoin and Ethereum transactions on your Ledger'),
     author=["James Prestwich"],
     author_email='james@summa.one',
     install_requires=reqs,
     packages=find_packages(),
     package_dir={'ledger': 'ledger'},
     package_data={'ledger': ['py.typed']},
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     classifiers=[
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)'
     ]
