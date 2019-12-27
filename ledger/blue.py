@@ -12,6 +12,10 @@ class LedgerException(Exception):
 
 
 class Ledger:
+    '''
+    A simple wrapper around the ledgerblue Dongle object.
+    It provides a context manager, as well as passthrough functions
+    '''
     client: Dongle = None
     debug: bool
 
@@ -26,21 +30,32 @@ class Ledger:
         self.client.device.close()
         self.client = None
 
-    async def __aenter__(self) -> 'Ledger':
+    def __enter__(self) -> 'Ledger':
         try:
             self.open()
             return self
         except CommException:
             raise RuntimeError('No device found')
 
+    async def __aenter__(self) -> 'Ledger':
+        return self.__enter__()
+
+    async def __exit__(self, *args: Any) -> None:
+        self.close()
+
     async def __aexit__(self, *args: Any) -> None:
         self.close()
 
-    async def exchange(self, data: bytes) -> bytes:
+    def exchange_sync(self, data: bytes):
+        '''Synchronous exchange'''
         try:
-            return bytes(await utils.asyncify(self.client.exchange, data))
+            return self.client.exchange(data)
         except Exception as e:
             raise LedgerException(str(e))
+
+    async def exchange(self, data: bytes) -> bytes:
+        '''Asynchronous exchange'''
+        return bytes(await utils.asyncify(self.exchange_sync, data))
 
 
 def make_apdu(

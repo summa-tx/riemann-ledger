@@ -53,12 +53,14 @@ async def recommended_pattern():
         signed_eth_tx = await eth.sign_transaction(client, eth_tx, derivation)
 
 
-async def as_an_object():        
+def as_an_object_sync():        
     # use the client as an object
     client = blue.Ledger()
     client.open()
 
-    ...
+    # higher-level methods assume async
+    # the sync exchange is only useful for low-level communication 
+    client.exchange_sync(...)
 
     # if you don't close it, future open() calls on other objects will error
     client.close()
