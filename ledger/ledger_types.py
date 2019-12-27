@@ -5,6 +5,9 @@ from mypy_extensions import TypedDict
 class LedgerPubkey(TypedDict):
     pubkey: bytes
     address: str
+
+
+class LedgerXPub(LedgerPubkey):
     chain_code: bytes
 
 

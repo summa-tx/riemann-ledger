@@ -1,7 +1,11 @@
 import asyncio
 from functools import partial
 
-from typing import Any, Awaitable, Callable, List
+from riemann import utils as rutils
+from riemann.encoding import base58
+
+from ledger.ledger_types import LedgerPubkey, LedgerXPub
+from typing import Any, Awaitable, cast, Callable, List, Optional
 
 BIP32_HARDEN = 0x80000000
 
@@ -66,3 +70,51 @@ def compress_pubkey(pubkey: bytes) -> bytes:
         return b'\x03' + pubkey[:32]
     else:
         return b'\x02' + pubkey[:32]
+
+
+def make_child_xpub(
+        derivation: str,
+        parent_or_none: Optional[LedgerXPub],
+        child: LedgerXPub,
+        mainnet: bool = True) -> str:
+    '''
+    Builds an xpub for a derived child using its parent and path
+    Args:
+        derivation      (str): the m-prefixed derivation path e.g. m/44h/0h/0h
+        parent (LedgerPubkey): the parent public key
+        child  (LedgerPubkey): the child public key
+        mainnet        (bool): whether to use mainnet prefixes
+    '''
+    indices = parse_derivation(derivation)
+
+    # determine appropriate xpub version bytes
+    if not mainnet:
+        prefix = VERSION_BYTES['testnet']['public']
+    else:
+        prefix = VERSION_BYTES['mainnet']['public']
+
+    if parent_or_none is not None:
+        # xpubs include the parent fingerprint
+        parent = cast(LedgerPubkey, parent_or_none)
+        compressed_parent_key = compress_pubkey(parent['pubkey'])
+        parent_fingerprint = rutils.hash160(compressed_parent_key)[:4]
+        child_index = indices[-1].to_bytes(4, byteorder='big')
+        depth = len(indices)
+    else:
+        # this means it's a master key
+        parent_fingerprint = b'\x00' * 4
+        child_index = b'\x00' * 4
+        depth = 0
+
+    # xpubs always use compressed pubkeys
+    compressed_pubkey = compress_pubkey(child['pubkey'])
+
+    # build the xpub
+    xpub = bytearray()
+    xpub.extend(prefix)                      # xpub prefix
+    xpub.extend([depth])                     # depth
+    xpub.extend(parent_fingerprint)          # paren't fingerprint
+    xpub.extend(child_index)                 # index
+    xpub.extend(child['chain_code'])         # chain_code
+    xpub.extend(compressed_pubkey)           # pubkey (comp)
+    return base58.encode(xpub)
