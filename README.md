@@ -31,7 +31,7 @@ derivation = 'm/44h/0h/0h/0/1'''
 
 async def recommended_pattern():
     # Recommended: use the client as a context manager
-    with blue.Ledger() as client:
+    async with blue.Ledger() as client:
         xpub = await btc.get_xpub(client, derivation)
 
         t: BitcoinTx = ...          # a riemann-tx native witness transaction
@@ -59,7 +59,7 @@ def as_an_object_sync():
     client.open()
 
     # higher-level methods assume async
-    # the sync exchange is only useful for low-level communication 
+    # the sync exchange is only useful for low-level communication
     client.exchange_sync(...)
 
     # if you don't close it, future open() calls on other objects will error

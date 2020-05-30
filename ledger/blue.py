@@ -40,7 +40,7 @@ class Ledger:
     async def __aenter__(self) -> 'Ledger':
         return self.__enter__()
 
-    async def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: Any) -> None:
         self.close()
 
     async def __aexit__(self, *args: Any) -> None:
@@ -74,7 +74,7 @@ def make_apdu(
         + data
         + rutils.i2be(response_len))  # LE
     if len(apdu) > 64:
-        raise ValueError('ADPU is too long')
+        raise ValueError('APDU is too long')
     return apdu
 
 
