@@ -21,7 +21,5 @@ setup(
     package_dir={'ledger': 'ledger'},
     package_data={'ledger': ['py.typed']},
     python_requires='>=3.7',
-    classifiers=[
-        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)'
-    ]
+    license='MIT OR Apache-2.0'
 )
