@@ -110,6 +110,8 @@ async def sign_transaction(
         for packet in packets:
             result = await client.exchange(packet)
     except blue.LedgerException as e:
+        if '6804' in str(e):
+            details = 'Hint: is your derivation in the correct bip44 subtree?'
         if t['data'] == b'' or '6a80' not in str(e):
             raise e
         if t['gasPrice'] < 1000 or t['gas'] < 21000:

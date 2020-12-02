@@ -27,11 +27,13 @@ from ether.ether_types import UnsignedEthTx
 
 from ledger import blue, btc, eth
 
-derivation = 'm/44h/0h/0h/0/1'''
+derivation = 'm/44h/0h/0h/0/1'
+# for Eth, make sure to use `m/44h/60h/0h/0/0`
 
 async def recommended_pattern():
     # Recommended: use the client as a context manager
     async with blue.Ledger() as client:
+        # Open the BTC app on the device
         xpub = await btc.get_xpub(client, derivation)
 
         t: BitcoinTx = ...          # a riemann-tx native witness transaction
@@ -45,6 +47,7 @@ async def recommended_pattern():
             prevouts=prevouts,
             derivation=derivation)
 
+        # Switch to the Ethereum app on the device
         # ethereum key info
         key = await eth.get_key_info(client, derivation)
 
@@ -53,7 +56,7 @@ async def recommended_pattern():
         signed_eth_tx = await eth.sign_transaction(client, eth_tx, derivation)
 
 
-def as_an_object_sync():        
+def as_an_object_sync():
     # use the client as an object
     client = blue.Ledger()
     client.open()

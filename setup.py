@@ -11,7 +11,7 @@ reqs = [
 
 setup(
     name='riemann-ledger',
-    version='2.2.0',
+    version='2.2.1',
     url='https://github.com/summa-tx/riemann-ledger',
     description=('Sign Bitcoin and Ethereum transactions on your Ledger'),
     author=["James Prestwich"],
